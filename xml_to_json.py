@@ -16,7 +16,8 @@ import json
 import os
 
 def xml_to_json(root, path, filename):
-    json_filename = filename[:-4].zfill(len(filename[:-4])) + '.json'       
+    json_filename = filename[:-4].zfill(len(filename[:-4])) + '.json'    
+    print("xmltodict", json_filename)
     root_dict = xmltodict.parse(ET.tostring(root, encoding='unicode'))
     root_json_str = json.dumps(root_dict, sort_keys=True, indent=4)
     json_file = open(os.path.join(path, json_filename), 'w', encoding='utf8')
@@ -28,7 +29,8 @@ def main():
     conversion_path = sys.argv[1]
     
     for filename in os.listdir(conversion_path):
-        if filename.endswith(".xml"): 
+        if filename.endswith(".xml"):
+            print("ElementTree", filename)
             tree = ET.parse(os.path.join(conversion_path, filename))
             root = tree.getroot()
             
