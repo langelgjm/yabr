@@ -21,6 +21,7 @@ def xml_to_json(root, path, filename):
     root_json_str = json.dumps(root_dict, sort_keys=True, indent=4)
     json_file = open(os.path.join(path, json_filename), 'w', encoding='utf8')
     json_file.write(root_json_str)
+    print("Wrote", json_filename)
     json_file.close()
 
 def main():
