@@ -9,7 +9,8 @@ Handles both individual items and files with many items
 Takes a single argument, which is the path of the XML files to process
 
 If you get weird parse errors, look for leading ... at the beginning of 
-XML files, which oddly appeared in 9 of several hundred for no apparent reason.
+XML files, which oddly appeared in less than a dozen of several hundred for no apparent reason.
+You can find these files using something like: grep -F ".<?xml" *.xml
 """
 
 import sys
