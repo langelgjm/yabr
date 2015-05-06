@@ -7,6 +7,9 @@ Created on Wed May  6 11:11:19 2015
 Converts XML files retrieved through the BGG API to JSON files
 Handles both individual items and files with many items
 Takes a single argument, which is the path of the XML files to process
+
+If you get weird parse errors, look for leading ... at the beginning of 
+XML files, which oddly appeared in 9 of several hundred for no apparent reason.
 """
 
 import sys
@@ -34,7 +37,7 @@ def main():
             tree = ET.parse(os.path.join(conversion_path, filename))
             root = tree.getroot()
             
-            # Multi-item files have thing root tag
+            # Multi-item files have this root tag
             if root.tag == 'items':
                 for child in root:
                     zfill_len = len(filename.split('-')[0])
