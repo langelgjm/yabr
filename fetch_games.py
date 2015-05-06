@@ -17,7 +17,9 @@ from retrying import retry
 #bgg_url = "http://www.boardgamegeek.com/xmlapi2/"
 bgg_url_thing = "http://www.boardgamegeek.com/xmlapi2/thing"
 # I don't actually know what the maximum item in the database is, but this seems close
-bgg_max_item = 178000
+# Looks like it may be 177476 as of May 6, 8:30 AM
+bgg_start_item = 1
+bgg_stop_item = 177476
 sleep_interval = 30
 
 def ranges(start, stop, step):
@@ -38,7 +40,7 @@ def requests_get(url, params):
     return requests.get(url, params=params)
 
 def main():
-    for r in ranges(1,bgg_max_item + 1,100):
+    for r in ranges(bgg_start_item,bgg_stop_item + 1,100):
         id_list_str = ','.join([str(i) for i in r])
         param_dict = {'id': id_list_str}
         print("Getting items.")
