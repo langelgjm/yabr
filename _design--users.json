@@ -1,0 +1,11 @@
+{
+    "_rev": "1-1cd937df3fdc2db3962dcb97d7d9591d",
+    "_id": "_design/users",
+    "language": "javascript",
+    "views": {
+        "users": {
+            "reduce": "function(keys, values) {\n\treturn sum(values)\n}",
+            "map": "function(doc) {\n\tif (doc.doctype==\"thread\") {\n\t\t// If this key exists, it's a single article thread\n\t\tif (doc.articles.article[\"@username\"]) {\n\t\t\temit(doc.articles.article[\"@username\"], 1);\n\t\t}\n\t\t// For multi-article threads, repeat for each article\n\t\telse {\n\t\t\tfor (var i in doc.articles.article) {\n\t\t\t\temit(doc.articles.article[i][\"@username\"], 1);\n\t\t\t}\n\t\t}\n\t}\n}\n"
+        }
+    }
+}
