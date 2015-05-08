@@ -44,7 +44,7 @@ def main():
     user_list = [d['key'] for d in users['rows'] if d['value'] > 2]
     # Pickle this list so we know what users we've gotten collections for
     # For non-initial runs, we'll need to eliminate users that are in the pickled file
-    user_list = ['tacroy_', 'melissa', 'Meerkat', 'Morphie', 'nunovix']
+    # debug example: user_list = ['tacroy_', 'melissa', 'Meerkat', 'Morphie', 'nunovix']
     f = open('fetch_collections_user_list.pickle', mode='wb')
     pickle.dump(user_list, f)
     f.close()   
