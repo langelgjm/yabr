@@ -17,13 +17,6 @@ from couchdb import CouchDB
 couchdb_url = "http://127.0.0.1:5984"
 bgg_url_collection = "http://www.boardgamegeek.com/xmlapi2/collection"
 
-bgg_start_thread = 1
-# Maximum thread number as of May 6, ~10 AM
-bgg_stop_thread = 1366106
-# Sample about 1% of the total number of threads
-bgg_sample_stop = 13661
-sleep_interval = 5
-
 @retry(wait_exponential_multiplier=1000, wait_exponential_max=120000)
 def fetch_collection(url, params):
     r = requests.get(url, params=params)
