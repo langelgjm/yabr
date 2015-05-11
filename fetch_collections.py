@@ -25,6 +25,7 @@ bgg_sample_stop = 13661
 sleep_interval = 5
 
 @retry(wait_exponential_multiplier=1000, wait_exponential_max=300000)
+
 def fetch_collection(url, params):
     r = requests.get(url, params=params)
     if r.status_code == 202:

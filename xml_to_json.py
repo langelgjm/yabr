@@ -53,7 +53,9 @@ def xml_to_json(filename, path):
             tree = ET.parse(os.path.join(path, filename))
             root = tree.getroot()
             # Avoid converting missing threads or other missing responses
-            if root.tag == 'error':
+            # 'error' happens when no thread exists with that number
+            # 'html' happens for some kinds of timeouts
+            if root.tag in ('error', 'html'):
                 return
             # Multi-item files have this root tag
             elif root.tag == 'items':

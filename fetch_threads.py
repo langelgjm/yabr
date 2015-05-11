@@ -13,7 +13,10 @@ import requests
 import os
 import time
 from retrying import retry
+from couchdb import CouchDB
 
+db_url = "http://127.0.0.1:5984"
+db_name = "yabr"
 bgg_url_thread = "http://www.boardgamegeek.com/xmlapi2/thread"
 bgg_start_thread = 1
 # Maximum thread number as of May 6, ~10 AM
@@ -27,14 +30,29 @@ def requests_get(url, params):
     return requests.get(url, params=params)
 
 def main():
+    yabr = CouchDB(db_url, db_name)
+
+    # Make a list of all possible ids
     thread_id_list = list(range(bgg_start_thread, bgg_stop_thread))
-    random.shuffle(thread_id_list)
-    sampled_id_list = [thread_id_list.pop() for i in range(0, bgg_sample_stop)]
+    full_set = set(thread_id_list)
+
+    # Get all the thread ids we already have    
+    db_thread_list = yabr.get_view("yabr", "threads")
+    in_db_set = set([d['key'] for d in db_thread_list['rows']])
+
+    # Find those thread ids that we don't already have
+    not_in_db_set = full_set.difference(in_db_set)   
+    not_in_db_list = list(not_in_db_set)
+    
+    # Shuffle, then take the desired sample size, then sort
+    random.shuffle(not_in_db_list)
+    sampled_id_list = [not_in_db_list.pop() for i in range(0, bgg_sample_stop)]
     sampled_id_list.sort()
+    
     # Pickle both lists in case something goes wrong.
     # By saving both we can continue to increase the sample without replacement, 
     # and we easily know what we have already sampled.
-    for l in ('thread_id_list', 'sampled_id_list'):
+    for l in ('not_in_db_list', 'sampled_id_list'):
         f = open(l + '.pickle', mode='wb')
         pickle.dump(locals()[l], f)
         f.close()
