@@ -25,7 +25,7 @@ bgg_stop_thread = 1366106
 bgg_sample_stop = 13661
 sleep_interval = 5
 
-@retry(wait_exponential_multiplier=1000, wait_exponential_max=120000)
+@retry(wait_exponential_multiplier=1000, wait_exponential_max=300000)
 def requests_get(url, params):
     return requests.get(url, params=params)
 
