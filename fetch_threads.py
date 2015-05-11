@@ -39,6 +39,7 @@ def main():
     # Get all the thread ids we already have    
     db_thread_list = yabr.get_view("yabr", "threads")
     in_db_set = set([d['key'] for d in db_thread_list['rows']])
+    print(len(in_db_set), "threads in database.")
 
     # Find those thread ids that we don't already have
     not_in_db_set = full_set.difference(in_db_set)   
@@ -59,7 +60,7 @@ def main():
 
     for i, t in enumerate(sampled_id_list):
         param_dict = {'id': str(t)}
-        print("Getting thread ", str(t), " (", str(i), " of ", str(bgg_sample_stop), ")", sep="")
+        print("Getting thread ", t, " (", i+1, " of ", bgg_sample_stop, ")", sep="")
         response = requests_get(bgg_url_thread, param_dict)
         xml_file_name = str(t).zfill(7) + '.xml'
         print("Writing", xml_file_name)
