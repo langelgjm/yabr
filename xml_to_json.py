@@ -6,7 +6,8 @@ Created on Wed May  6 11:11:19 2015
 
 Converts XML files retrieved through the BGG API to JSON files
 Handles both individual items and files with many items
-Takes a single argument, which is the path of the XML files to process. 
+Takes two arguments: xml_type, which is either "thing" or ignored (but must be present), and 
+the path of the XML files to process. 
 
 Parallelized.
 
@@ -24,6 +25,7 @@ from multiprocessing import Pool
 from itertools import repeat
 import html
 import re
+import unicodedata
 
 num_processes = 4
 
@@ -39,7 +41,7 @@ def to_json(root, path, filename):
     #print("Wrote", json_filename)
     json_file.close()
 
-def xml_to_json(filename, path):
+def xml_to_json(filename, path, xml_type=None):
     """
     Get XML from file, pass to to_json.
     Handles files with multiple items.
@@ -58,14 +60,17 @@ def xml_to_json(filename, path):
             if root.tag in ('error', 'html'):
                 return
             # Multi-item files have this root tag
-            elif root.tag == 'items':
+            # But we only want to break them up like so when dealing with multi-game files
+            elif root.tag == 'items' and xml_type == "thing":
                 for child in root:
                     zfill_len = len(filename.split('-')[0])
                     true_filename = child.get('id').zfill(zfill_len) + '.xml'
                     to_json(child, path, true_filename)
+            # Single item files and multi-item files that are not things (e.g., collections)
             else:
                 to_json(root, path, filename)
     except ET.ParseError as e:
+        # Handle undefined entity errors
         if e.code == 11:
             print(os.path.join(path, filename), e)
     
@@ -96,14 +101,46 @@ def xml_to_json(filename, path):
             new_xml_file.close()
             # Recursively call ourself to handle the next error in the same file
             xml_to_json(filename, path)
+        # Handle not well-formed (invalid token) errors
+        elif e.code == 4:
+            print(os.path.join(path, filename), e)
+            
+            # Make a backup of the original file
+            filenamepath = os.path.join(path, filename)
+            backup_filenamepath = filenamepath + '.bak'
+            # Delete existing backup file silently, if any
+            try:
+                os.unlink(backup_filenamepath)
+            except OSError:
+                pass
+            os.rename(filenamepath, backup_filenamepath)
+            xml_file = open(backup_filenamepath, 'r')
+            new_xml_file = open(filenamepath, 'w')
+            # Read backup file line by line, replacing entities as necessary
+            # Wrie output to original file name
+            for i, line in enumerate(xml_file):
+                # Find entity using line, column tuple from e.position
+                if i + 1 == e.position[0]:
+                    offending_char = line[e.position[1]]
+                    print("Removing control codes such as", repr(offending_char))
+                    new_xml_file.write(''.join(char for char in line if unicodedata.category(char)[0] != 'C'))
+                else:
+                    new_xml_file.write(line)
+            xml_file.close()
+            new_xml_file.close()
+            # Recursively call ourself to handle the next error in the same file
+            xml_to_json(filename, path)       
         else:
             print("Unhandled ParseError", e, "in", filename)
 
 def main():
-    conversion_path = sys.argv[1]
+    xml_type = sys.argv[1]
+    conversion_path = sys.argv[2]
     file_list = os.listdir(conversion_path)
     with Pool(num_processes) as p:
-        p.starmap(xml_to_json, zip(file_list, repeat(conversion_path, len(file_list))))
+        p.starmap(xml_to_json, zip(file_list, 
+                                   repeat(conversion_path, len(file_list)), 
+                                   repeat(xml_type, len(file_list))))
     
 if __name__ == "__main__":
     main()

@@ -1,0 +1,17 @@
+{
+    "key": "_design/yabr",
+    "doc": {
+        "language": "javascript",
+        "_rev": "1-94cd78e2fd2920dcf8b5c42762c81d0d",
+        "_id": "_design/yabr",
+        "views": {
+            "threads": {
+                "map": "function(doc) {\n\tif (doc.doctype==\"thread\") {\n\t\tif (doc[\"@id\"] && doc[\"@numarticles\"]) {\n\t\t\temit(+doc[\"@id\"], +doc[\"@numarticles\"]);\n\t\t}\n\t\telse {\n\t\t\temit(doc._id, -1)\n\t\t}\n\t}\n}\n"
+            }
+        }
+    },
+    "id": "_design/yabr",
+    "value": {
+        "rev": "1-94cd78e2fd2920dcf8b5c42762c81d0d"
+    }
+}

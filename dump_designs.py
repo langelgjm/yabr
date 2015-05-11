@@ -14,7 +14,7 @@ db_name = "yabr"
 
 def main():
     yabr = CouchDB(couchdb_url, db_name)
-    yabr.dump_views()
+    yabr.dump_designs()
 
 if __name__ == "__main__":
     main()

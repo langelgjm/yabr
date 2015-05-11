@@ -8,6 +8,7 @@ Basic CouchDB class to make life easier
 """
 
 import requests
+import json
 
 class CouchDB(object):
     def __init__(self, url, db):
@@ -54,13 +55,15 @@ class CouchDB(object):
                 raise Exception("HTTP " + str(r.status_code))
             else:
                 return r.json()
-    def dump_views(self):
-        '''FIXME'''
+    def dump_designs(self):
         param_dict = {'startkey': '"_design/"',
                       'endkey': '"_design0"',
                       'include_docs': 'true'}            
         r = requests.get('/'.join([self.url, self.db, "_all_docs"]), params=param_dict)
+        # Write out the JSON document itself
         for row in r.json()['rows']:
+            json.dump(row, open(row['id'].replace('/', '%2F') + '.json', 'w'), indent=4)
+            # Also create separate files for the map/reduce javascript
             for view in row["doc"]["views"]:
                 f = open(view + ".js", 'w')
                 for func in row["doc"]["views"][view]:
