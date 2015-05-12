@@ -37,12 +37,21 @@ def fetch_collection(url, params):
 
 def main():
     yabr = CouchDB(couchdb_url, "yabr")
-    print("Getting user list from database.")
-    users = yabr.get_view("_design/users", group=True)
+    print("Getting user list.")
+    user_list = yabr.get_view("users", "users", group=True)
     # Filter to usernames that appear more than twice
     # Thus we bias our collection data to more active users, and presumably cut down
     # on those users likely to have small or no collections
-    user_list = [d['key'] for d in users['rows'] if d['value'] > 2]
+    all_users = set([d['key'] for d in user_list['rows'] if d['value'] > 2])   
+    print(len(all_users), "users with > 2 articles in database.")
+
+    print("Getting collections.")    
+    collection_list = yabr.get_view("yabr", "collections_totalitems", group=False)
+    collection_users = set([d['key'] for d in collection_list['rows']])
+
+    # Find those users for whom we don't already have collections
+    user_list = list(all_users.difference(collection_users))    
+    
     # Pickle this list so we know what users we've gotten collections for
     # For non-initial runs, we'll need to eliminate users that are in the pickled file
     # debug example: user_list = ['tacroy_', 'melissa', 'Meerkat', 'Morphie', 'nunovix']

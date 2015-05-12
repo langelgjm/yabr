@@ -14,6 +14,10 @@ Parallelized.
 If you get weird parse errors, look for leading ... at the beginning of 
 XML files, which oddly appeared in less than a dozen of several hundred for no apparent reason.
 You can find these files using something like: grep -F ".<?xml" *.xml
+
+Also, sometimes we might encounter files resulting from timeouts or bad gateway errors.
+These will be HTML files, not XML, and will throw a ParseError.
+Easiest to find them with grep -F "<html" *.xml beforehand and delete them.
 """
 
 import sys
