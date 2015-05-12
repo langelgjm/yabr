@@ -38,7 +38,7 @@ def fetch_collection(url, params):
 def main():
     yabr = CouchDB(couchdb_url, "yabr")
     print("Getting user list.")
-    user_list = yabr.get_view("users", "users", group=True)
+    user_list = yabr.get_view("yabr", "users", group=True)
     # Filter to usernames that appear more than twice
     # Thus we bias our collection data to more active users, and presumably cut down
     # on those users likely to have small or no collections
