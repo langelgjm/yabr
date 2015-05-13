@@ -38,7 +38,7 @@ def post_json(filename, path, doctype):
         # Collections need special handling. 
         # We want to add a field that gives the username to whom the collection belongs.
         if doctype == "collection":
-            obj_data['@username'] = filename.rstrip('.json')
+            obj_data['@username'] = filename[:-5]
         # Convert back to JSON for POSTing
         # The implicit default ensure_ascii=True is necessary here;
         # Otherwise it is technically invalid JSON which CouchDB rejects
