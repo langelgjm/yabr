@@ -1,3 +1,7 @@
+reduce = function(keys, values) {
+	return sum(values);
+}
+
 map = function(doc) {
 	if (doc.doctype=="thread") {
 		// If this key exists, it's a single article thread
@@ -12,7 +16,3 @@ map = function(doc) {
 		}
 	}
 }
-reduce = function(keys, values) {
-	return sum(values);
-}
-

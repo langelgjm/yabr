@@ -1,30 +1,30 @@
 {
-    "key": "_design/yabr",
-    "id": "_design/yabr",
-    "value": {
-        "rev": "6-497c8a849e997ee312ad3b66f58d3601"
-    },
     "doc": {
         "_id": "_design/yabr",
         "_rev": "6-497c8a849e997ee312ad3b66f58d3601",
         "language": "javascript",
         "views": {
-            "collections": {
-                "map": "function(doc) {\n\tif (doc.doctype==\"collection\") {\n\t\tvar items = new Array();\n\t\t\n\t\t// For users with no items in their collection, the result will be an empty list\n\t\tif (+doc[\"@totalitems\"] > 0) {\n\t\t\t// For users with only one item, we create a container_item that is an array with one element\n\t\t\tif (+doc[\"@totalitems\"] == 1) {\n\t\t\t\tvar container_item = new Array();\n\t\t\t\tcontainer_item.push(doc.item);\n\t\t\t}\n\t\t\telse {\n\t\t\t\tcontainer_item = doc.item;\n\t\t\t}\n\t\n\t\t\t// Include only things that are boardgames; push them onto the items array\n\t\t\tfor (var i in container_item) {\n\t\t\t\tif (container_item[i][\"@objecttype\"] == \"thing\" && container_item[i][\"@subtype\"] == \"boardgame\") {\n\t\t\t\t\titem = {\n\t\t\t\t\t\t\tcollid: container_item[i][\"@collid\"],\n\t\t\t\t\t\t\tobjectid: container_item[i][\"@objectid\"],\n\t\t\t\t\t\t\tname: container_item[i].name[\"#text\"],\n\t\t\t\t\t\t\tnumplays: container_item[i].numplays,\n\t\t\t\t\t\t\tstats: container_item[i].stats,\n\t\t\t\t\t\t\tstatus: container_item[i].status,\n\t\t\t\t\t\t\tyearpublished: container_item[i].yearpublished\n\t\t\t\t\t\t\t};\n\t\t\t\t\titems.push(item);\n\t\t\t\t}\n\t\t\t}\n\t\t}\n\t\t\n\t\temit(doc[\"@username\"], items);\n\t}\n}"
-            },
-            "threads": {
-                "map": "function(doc) {\n\tif (doc.doctype==\"thread\") {\n\t\tif (doc[\"@id\"] && doc[\"@numarticles\"]) {\n\t\t\temit(+doc[\"@id\"], +doc[\"@numarticles\"]);\n\t\t}\n\t\telse {\n\t\t\temit(doc._id, -1)\n\t\t}\n\t}\n}\n"
-            },
             "collections_totalitems": {
                 "map": "function(doc) {\n\tif (doc.doctype==\"collection\") {\n\t\temit(doc[\"@username\"], +doc[\"@totalitems\"]);\n\t}\n}\n"
+            },
+            "users": {
+                "reduce": "function(keys, values) {\n\treturn sum(values);\n}\n",
+                "map": "function(doc) {\n\tif (doc.doctype==\"thread\") {\n\t\t// If this key exists, it's a single article thread\n\t\tif (doc.articles.article[\"@username\"]) {\n\t\t\temit(doc.articles.article[\"@username\"], 1);\n\t\t}\n\t\t// For multi-article threads, repeat for each article\n\t\telse {\n\t\t\tfor (var i in doc.articles.article) {\n\t\t\t\temit(doc.articles.article[i][\"@username\"], 1);\n\t\t\t}\n\t\t}\n\t}\n}"
+            },
+            "collections": {
+                "map": "function(doc) {\n\tif (doc.doctype==\"collection\") {\n\t\tvar items = new Array();\n\t\t\n\t\t// For users with no items in their collection, the result will be an empty list\n\t\tif (+doc[\"@totalitems\"] > 0) {\n\t\t\t// For users with only one item, we create a container_item that is an array with one element\n\t\t\tif (+doc[\"@totalitems\"] == 1) {\n\t\t\t\tvar container_item = new Array();\n\t\t\t\tcontainer_item.push(doc.item);\n\t\t\t}\n\t\t\telse {\n\t\t\t\tcontainer_item = doc.item;\n\t\t\t}\n\t\n\t\t\t// Include only things that are boardgames; push them onto the items array\n\t\t\tfor (var i in container_item) {\n\t\t\t\tif (container_item[i][\"@objecttype\"] == \"thing\" && container_item[i][\"@subtype\"] == \"boardgame\") {\n\t\t\t\t\titem = {\n\t\t\t\t\t\t\tcollid: container_item[i][\"@collid\"],\n\t\t\t\t\t\t\tobjectid: container_item[i][\"@objectid\"],\n\t\t\t\t\t\t\tname: container_item[i].name[\"#text\"],\n\t\t\t\t\t\t\tnumplays: container_item[i].numplays,\n\t\t\t\t\t\t\tstats: container_item[i].stats,\n\t\t\t\t\t\t\tstatus: container_item[i].status,\n\t\t\t\t\t\t\tyearpublished: container_item[i].yearpublished\n\t\t\t\t\t\t\t};\n\t\t\t\t\titems.push(item);\n\t\t\t\t}\n\t\t\t}\n\t\t}\n\t\t\n\t\temit(doc[\"@username\"], items);\n\t}\n}"
             },
             "boardgames": {
                 "map": "function(doc) {\n\tif (doc.doctype==\"thing\") {\n\t\tif (doc[\"@type\"] == \"boardgame\") {\n\n\t\t\tvar name = new String();\n\n\t\t\tif (doc.name[\"@value\"]) {\n\t\t\t\tname = doc.name[\"@value\"];\n\t\t\t}\n\t\t\telse {\n\t\t\t\tfor (var i in doc.name) {\n\t\t\t\t\tif (doc.name[i][\"@type\"] == \"primary\") {\n\t\t\t\t\t\tname = doc.name[i][\"@value\"];\n\t\t\t\t\t\tbreak;\n\t\t\t\t\t}\n\t\t\t\t}\n\t\t\t}\n\t\t\t\n\t\t\tvar categories = new Array();\n\t\t\tvar mechanics = new Array();\n\t\t\tvar designers = new Array();\n\n\t\t\tfor (var i in doc.link) {\n\t\t\t\tswitch(doc.link[i][\"@type\"]) {\n\t\t\t\t\tcase \"boardgamecategory\":\n\t\t\t\t\t\tcategories.push(doc.link[i][\"@value\"]);\n\t\t\t\t\t\tbreak;\n\t\t\t\t\tcase \"boardgamemechanic\":\n\t\t\t\t\t\tmechanics.push(doc.link[i][\"@value\"]);\n\t\t\t\t\t\tbreak;\n\t\t\t\t\tcase \"boardgamedesigner\":\n\t\t\t\t\t\tdesigners.push(doc.link[i][\"@value\"]);\n\t\t\t\t\t\tbreak;\n\t\t\t\t}\n\t\t\t}\n\t\t\t\n\t\t\temit(doc._id, {\n\t\t\t\tbgg_id: doc[\"@id\"],\n\t\t\t\tname: name,\n\t\t\t\tdescription: doc.description,\n\t\t\t\tminplayers: doc.minplayers[\"@value\"],\n\t\t\t\tmaxplayers: doc.maxplayers[\"@value\"],\n\t\t\t\tminplaytime: doc.minplaytime[\"@value\"],\n\t\t\t\tplayingtime: doc.playingtime[\"@value\"],\n\t\t\t\tmaxplaytime: doc.maxplaytime[\"@value\"],\n\t\t\t\tminage: doc.minage[\"@value\"],\n\t\t\t\tyear: doc.yearpublished[\"@value\"],\n\t\t\t\tcategories: categories,\n\t\t\t\tmechanics: mechanics,\n\t\t\t\tdesigners: designers\n\t\t\t});\n\t\t}\n\t}\n}\n"
             },
-            "users": {
-                "map": "function(doc) {\n\tif (doc.doctype==\"thread\") {\n\t\t// If this key exists, it's a single article thread\n\t\tif (doc.articles.article[\"@username\"]) {\n\t\t\temit(doc.articles.article[\"@username\"], 1);\n\t\t}\n\t\t// For multi-article threads, repeat for each article\n\t\telse {\n\t\t\tfor (var i in doc.articles.article) {\n\t\t\t\temit(doc.articles.article[i][\"@username\"], 1);\n\t\t\t}\n\t\t}\n\t}\n}",
-                "reduce": "function(keys, values) {\n\treturn sum(values);\n}\n"
+            "threads": {
+                "map": "function(doc) {\n\tif (doc.doctype==\"thread\") {\n\t\tif (doc[\"@id\"] && doc[\"@numarticles\"]) {\n\t\t\temit(+doc[\"@id\"], +doc[\"@numarticles\"]);\n\t\t}\n\t\telse {\n\t\t\temit(doc._id, -1)\n\t\t}\n\t}\n}\n"
             }
         }
+    },
+    "id": "_design/yabr",
+    "key": "_design/yabr",
+    "value": {
+        "rev": "6-497c8a849e997ee312ad3b66f58d3601"
     }
 }
