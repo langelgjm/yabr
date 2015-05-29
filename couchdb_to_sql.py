@@ -226,7 +226,7 @@ def main():
     # Let's call this "user_data" since it tells us what individual users think,
     # vs "item_data" which would tell us the features of particular board games
     print("Getting user data from CouchDB")
-    user_data = couch.get_view("yabr", "collections_userratings")
+    user_data = couch.get_view(couchdb_db, "collections_userratings")
 
     for user in user_data['rows']:
         # If a user has no collection, they will not be inserted into the database.
@@ -235,26 +235,57 @@ def main():
             for game_id, user_rating in user['value'].items():
                 # Explicit conversions of string representations of numbers 
                 # to numbers. Could also introduce bounds-checking here.
+                # In general we assume that game_id exists and is able to be 
+                # converted to an int without error. That may not be a safe 
+                # assumption.
                 game_id = int(game_id)
                 mysql.insert_user_data(user['key'], game_id, user_rating)
     
     print("Getting item data from CouchDB")
-    item_data = couch.get_view("yabr", "boardgames")
+    item_data = couch.get_view(couchdb_db, "boardgames")
     
     for item in item_data['rows']:
         # If an item has no dictionary data, it will not be inserted into the database.
         if item['value'].items():
+            print(item['value']['name'])
             # Explicit conversions of potential string representations of numbers 
             # to numbers. Could also introduce bounds-checking here.
             game_id = int(item['value']['bgg_id'])
-            minplayers = int(item['value']['minplayers'])
-            maxplayers = int(item['value']['maxplayers'])
-            minplaytime = int(item['value']['minplaytime'])
-            playingtime = int(item['value']['playingtime'])
-            maxplaytime = int(item['value']['maxplaytime'])
-            minage = int(item['value']['minage'])
-            year = int(item['value']['year'])
-            print(item['value']['name'])
+            minplayers = None
+            maxplayers = None
+            minplaytime = None
+            playingtime = None
+            maxplaytime = None
+            minage = None
+            year = None
+            try:
+                minplayers = int(item['value']['minplayers'])
+            except ValueError:
+                pass
+            try:
+                maxplayers = int(item['value']['maxplayers'])            
+            except ValueError:
+                pass
+            try:
+                minplaytime = int(item['value']['minplaytime'])
+            except ValueError:
+                pass
+            try:                
+                playingtime = int(item['value']['playingtime'])
+            except ValueError:
+                pass
+            try:            
+                maxplaytime = int(item['value']['maxplaytime'])
+            except ValueError:
+                pass
+            try:
+                minage = int(item['value']['minage'])
+            except ValueError:
+                pass
+            try:                
+                year = int(item['value']['year'])
+            except ValueError:
+                pass                
             mysql.insert_item_data(game_id, item['value']['name'], item['value']['description'], 
                 minplayers, maxplayers, minplaytime, playingtime, 
                 maxplaytime, minage, year, item['value']['categories'], item['value']['mechanics'],
@@ -265,7 +296,7 @@ def main():
     # Furthermore, we could presumably update this info later, whereas the basic 
     # item metadata will not change.
     print("Getting item ratings from CouchDB")
-    item_ratings = couch.get_view("yabr", "boardgames_ratings", group=True)
+    item_ratings = couch.get_view(couchdb_db, "boardgames_ratings", group=True)
     
     # Note that it is possible to have rating information for an item that we don't have 
     # an item_data for yet. E.g., if a user has in their collection an item 
@@ -278,12 +309,32 @@ def main():
             # Explicit conversions of potential string representations of numbers 
             # to numbers. Could also introduce bounds-checking here.
             game_id = int(item['key'])
-            average = float(item['value']['average'])
-            bayesaverage = float(item['value']['bayesaverage'])
-            median = float(item['value']['median'])
-            stddev = float(item['value']['stddev'])
-            usersrated = int(item['value']['usersrated'])
             print(game_id)
+            average = None
+            bayesaverage = None
+            median = None
+            stddev = None
+            usersrated = None
+            try:
+                average = float(item['value']['average'])
+            except ValueError:
+                pass                
+            try:
+                bayesaverage = float(item['value']['bayesaverage'])
+            except ValueError:
+                pass                
+            try:
+                median = float(item['value']['median'])
+            except ValueError:
+                pass                
+            try:
+                stddev = float(item['value']['stddev'])
+            except ValueError:
+                pass                
+            try:
+                usersrated = int(item['value']['usersrated'])
+            except ValueError:
+                pass                
             mysql.update_item_ratings(game_id, average, bayesaverage, 
                 median, stddev, usersrated) 
 
