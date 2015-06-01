@@ -19,6 +19,8 @@ map = function(doc) {
 			var categories = new Array();
 			var mechanics = new Array();
 			var designers = new Array();
+			var publishers = new Array();
+			var families = new Array();
 
 			for (var i in doc.link) {
 				switch(doc.link[i]["@type"]) {
@@ -31,6 +33,12 @@ map = function(doc) {
 					case "boardgamedesigner":
 						designers.push(doc.link[i]["@value"]);
 						break;
+					case "boardgamepublisher":
+						publishers.push(doc.link[i]["@value"]);
+						break;
+					case "boardgamefamily":
+						families.push(doc.link[i]["@value"]);
+						break;						
 				}
 			}
 			
@@ -47,9 +55,10 @@ map = function(doc) {
 				year: doc.yearpublished["@value"],
 				categories: categories,
 				mechanics: mechanics,
-				designers: designers
+				designers: designers,
+				publishers: publishers,
+				families: families
 			});
 		}
 	}
 }
-

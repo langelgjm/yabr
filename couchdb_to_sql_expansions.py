@@ -10,7 +10,6 @@ it into a MySQL database (which will be created if it does not exist).
 
 #import os
 #os.chdir("/Users/gjm/bin/yabr/")
-import sys
 from couchdb import CouchDB
 import pymysql.cursors
 
@@ -228,39 +227,14 @@ class YabrDB(object):
         self.connection.close()
 
 def main():
-    #try:
-    #    type_id = int(sys.argv[1])
-    #except ValueError:
-    #    sys.exit("You must specify an integer type_id as the sole argument.")
-    #finally:
-    #    type_id = 1
+    # Manually setting this so that the following items are inserted with an item type of 2 (boardgameexapnsion)
+    type_id = 1
 
     mysql = YabrDB(mysql_url, mysql_db)    
     couch = CouchDB(couchdb_url, couchdb_db)
-
-    # Let's call this "user_data" since it tells us what individual users think,
-    # vs "item_data" which would tell us the features of particular board games
-    print("Getting user data from CouchDB")
-    user_data = couch.get_view(couchdb_db, "collections_userratings")
-
-    for user in user_data['rows']:
-        # If a user has no collection, they will not be inserted into the database.
-        if user['value'].items():
-            print(user['key'])
-            for game_id, user_rating in user['value'].items():
-                # Explicit conversions of string representations of numbers 
-                # to numbers. Could also introduce bounds-checking here.
-                # In general we assume that game_id exists and is able to be 
-                # converted to an int without error. That may not be a safe 
-                # assumption.
-                game_id = int(game_id)
-                mysql.insert_user_data(user['key'], game_id, user_rating)
     
     print("Getting item data from CouchDB")
     item_data = couch.get_view(couchdb_db, "boardgames")
-    
-    # Manually setting this so that the following items are inserted with an item type of 1 (boardgame)
-    type_id = 1
     
     for item in item_data['rows']:
         # If an item has no dictionary data, it will not be inserted into the database.
@@ -308,53 +282,6 @@ def main():
                 minplayers, maxplayers, minplaytime, playingtime, 
                 maxplaytime, minage, year, item['value']['categories'], item['value']['mechanics'],
                 item['value']['designers'], item['value']['publishers'], item['value']['families'])
-    
-    # group=True necessary to reduce multiple ratings per game to a single one.
-    # These are going to be updating already-existing items with additional info.
-    # Furthermore, we could presumably update this info later, whereas the basic 
-    # item metadata will not change.
-    print("Getting item ratings from CouchDB")
-    item_ratings = couch.get_view(couchdb_db, "boardgames_ratings", group=True)
-    
-    # Note that it is possible to have rating information for an item that we don't have 
-    # an item_data for yet. E.g., if a user has in their collection an item 
-    # that was added after we scraped the items, or when working with subsets of data.
-    # In that case an UPDATE will not work, since we will not find the original item.
-    # In that case we should INSERT a new item with NULL metadata, then UPDATE it.
-    for item in item_ratings['rows']:
-        # If an item has no dictionary data, it will not be inserted into the database.
-        if item['value'].items():
-            # Explicit conversions of potential string representations of numbers 
-            # to numbers. Could also introduce bounds-checking here.
-            game_id = int(item['key'])
-            print(game_id)
-            average = None
-            bayesaverage = None
-            median = None
-            stddev = None
-            usersrated = None
-            try:
-                average = float(item['value']['average'])
-            except ValueError:
-                pass                
-            try:
-                bayesaverage = float(item['value']['bayesaverage'])
-            except ValueError:
-                pass                
-            try:
-                median = float(item['value']['median'])
-            except ValueError:
-                pass                
-            try:
-                stddev = float(item['value']['stddev'])
-            except ValueError:
-                pass                
-            try:
-                usersrated = int(item['value']['usersrated'])
-            except ValueError:
-                pass                
-            mysql.update_item_ratings(game_id, average, bayesaverage, 
-                median, stddev, usersrated) 
 
     mysql.close()
 
